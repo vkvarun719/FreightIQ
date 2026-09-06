@@ -1,0 +1,8 @@
+{
+  "name": "FreightIQ 2026",
+  "description": "Tactical maritime bulk freight voyage what-if simulator, stochastic pricing engine, fleet radar, demurrage risk guard, and enterprise chartering desk.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
