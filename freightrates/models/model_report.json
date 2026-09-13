@@ -1,0 +1,422 @@
+{
+  "total_historical_records": 3160,
+  "date_range": {
+    "start": "2014-01-02",
+    "end": "2026-09-08"
+  },
+  "features_used": [
+    "ret_1",
+    "ret_2",
+    "ret_3",
+    "ret_5",
+    "ret_10",
+    "ret_20",
+    "ret_30",
+    "ret_60",
+    "ratio_sma5",
+    "ratio_sma10",
+    "ratio_sma20",
+    "ratio_sma50",
+    "ratio_sma100",
+    "ratio_sma200",
+    "golden_cross",
+    "macd",
+    "macd_signal",
+    "macd_hist",
+    "rsi_14",
+    "vol_5",
+    "vol_20",
+    "vol_60",
+    "parkinson_vol",
+    "bb_pct_b",
+    "bb_bandwidth",
+    "sin_annual",
+    "cos_annual",
+    "sin_semiannual",
+    "cos_semiannual",
+    "sin_quarterly",
+    "cos_quarterly",
+    "month",
+    "quarter",
+    "day_of_week"
+  ],
+  "train_split": {
+    "count": 2479,
+    "start": "2014-03-27",
+    "end": "2024-03-08"
+  },
+  "test_split": {
+    "count": 620,
+    "start": "2024-03-11",
+    "end": "2026-09-07"
+  },
+  "model_metrics": {
+    "Ridge Regression": {
+      "MAE": 35.54,
+      "RMSE": 48.91,
+      "MAPE_%": 1.87,
+      "R2_Score": 0.9924,
+      "Directional_Accuracy_%": 69.68
+    },
+    "Gradient Boosted Trees (GBDT)": {
+      "MAE": 34.92,
+      "RMSE": 47.83,
+      "MAPE_%": 1.84,
+      "R2_Score": 0.9927,
+      "Directional_Accuracy_%": 70.97
+    },
+    "Deep Neural Network (MLP)": {
+      "MAE": 36.26,
+      "RMSE": 49.48,
+      "MAPE_%": 1.9,
+      "R2_Score": 0.9922,
+      "Directional_Accuracy_%": 70.97
+    },
+    "Weighted Meta-Ensemble": {
+      "MAE": 36.49,
+      "RMSE": 50.02,
+      "MAPE_%": 1.9,
+      "R2_Score": 0.9921,
+      "Directional_Accuracy_%": 69.52
+    }
+  },
+  "ensemble_weights": {
+    "ridge": 0.24699017390297515,
+    "gbdt": 0.23997753862887478,
+    "dnn": 0.5130322874681501
+  },
+  "latest_rate": 3584.0,
+  "latest_date": "2026-09-08",
+  "sample_30d_forecast": [
+    {
+      "step": 1,
+      "date": "2026-09-09",
+      "predicted_price": 3626.14,
+      "lower_95": 3408.15,
+      "upper_95": 3844.13,
+      "ridge_pred": 3608.91,
+      "gbdt_pred": 3599.0,
+      "dnn_pred": 3667.74,
+      "volatility_std": 110.66
+    },
+    {
+      "step": 2,
+      "date": "2026-09-10",
+      "predicted_price": 3690.71,
+      "lower_95": 3377.21,
+      "upper_95": 4004.21,
+      "ridge_pred": 3657.47,
+      "gbdt_pred": 3664.62,
+      "dnn_pred": 3740.59,
+      "volatility_std": 158.33
+    },
+    {
+      "step": 3,
+      "date": "2026-09-11",
+      "predicted_price": 3762.1,
+      "lower_95": 3369.34,
+      "upper_95": 4154.86,
+      "ridge_pred": 3732.11,
+      "gbdt_pred": 3745.66,
+      "dnn_pred": 3806.48,
+      "volatility_std": 197.37
+    },
+    {
+      "step": 4,
+      "date": "2026-09-14",
+      "predicted_price": 3810.03,
+      "lower_95": 3345.41,
+      "upper_95": 4274.65,
+      "ridge_pred": 3807.69,
+      "gbdt_pred": 3807.68,
+      "dnn_pred": 3834.01,
+      "volatility_std": 232.31
+    },
+    {
+      "step": 5,
+      "date": "2026-09-15",
+      "predicted_price": 3880.59,
+      "lower_95": 3351.88,
+      "upper_95": 4409.3,
+      "ridge_pred": 3833.75,
+      "gbdt_pred": 3858.48,
+      "dnn_pred": 3937.98,
+      "volatility_std": 263.04
+    },
+    {
+      "step": 6,
+      "date": "2026-09-16",
+      "predicted_price": 3955.48,
+      "lower_95": 3362.65,
+      "upper_95": 4548.31,
+      "ridge_pred": 3925.49,
+      "gbdt_pred": 3937.36,
+      "dnn_pred": 4003.09,
+      "volatility_std": 293.48
+    },
+    {
+      "step": 7,
+      "date": "2026-09-17",
+      "predicted_price": 4002.1,
+      "lower_95": 3346.18,
+      "upper_95": 4658.02,
+      "ridge_pred": 3996.01,
+      "gbdt_pred": 4011.87,
+      "dnn_pred": 4024.09,
+      "volatility_std": 323.11
+    },
+    {
+      "step": 8,
+      "date": "2026-09-18",
+      "predicted_price": 4010.22,
+      "lower_95": 3297.25,
+      "upper_95": 4723.19,
+      "ridge_pred": 4021.54,
+      "gbdt_pred": 4042.29,
+      "dnn_pred": 4011.73,
+      "volatility_std": 349.49
+    },
+    {
+      "step": 9,
+      "date": "2026-09-21",
+      "predicted_price": 3997.12,
+      "lower_95": 3235.65,
+      "upper_95": 4758.59,
+      "ridge_pred": 4006.98,
+      "gbdt_pred": 4021.79,
+      "dnn_pred": 4001.73,
+      "volatility_std": 371.45
+    },
+    {
+      "step": 10,
+      "date": "2026-09-22",
+      "predicted_price": 3997.28,
+      "lower_95": 3193.34,
+      "upper_95": 4801.22,
+      "ridge_pred": 3979.66,
+      "gbdt_pred": 3981.9,
+      "dnn_pred": 4034.46,
+      "volatility_std": 390.26
+    },
+    {
+      "step": 11,
+      "date": "2026-09-23",
+      "predicted_price": 4004.04,
+      "lower_95": 3156.74,
+      "upper_95": 4851.34,
+      "ridge_pred": 3991.26,
+      "gbdt_pred": 4012.58,
+      "dnn_pred": 4024.97,
+      "volatility_std": 409.32
+    },
+    {
+      "step": 12,
+      "date": "2026-09-24",
+      "predicted_price": 3998.13,
+      "lower_95": 3107.37,
+      "upper_95": 4888.89,
+      "ridge_pred": 3999.93,
+      "gbdt_pred": 4020.15,
+      "dnn_pred": 4003.35,
+      "volatility_std": 428.25
+    },
+    {
+      "step": 13,
+      "date": "2026-09-25",
+      "predicted_price": 3971.22,
+      "lower_95": 3041.01,
+      "upper_95": 4901.43,
+      "ridge_pred": 3984.84,
+      "gbdt_pred": 3991.15,
+      "dnn_pred": 3969.82,
+      "volatility_std": 445.08
+    },
+    {
+      "step": 14,
+      "date": "2026-09-28",
+      "predicted_price": 3930.77,
+      "lower_95": 2967.35,
+      "upper_95": 4894.19,
+      "ridge_pred": 3945.34,
+      "gbdt_pred": 3965.12,
+      "dnn_pred": 3919.32,
+      "volatility_std": 458.77
+    },
+    {
+      "step": 15,
+      "date": "2026-09-29",
+      "predicted_price": 3874.87,
+      "lower_95": 2883.1,
+      "upper_95": 4866.64,
+      "ridge_pred": 3891.08,
+      "gbdt_pred": 3894.07,
+      "dnn_pred": 3867.74,
+      "volatility_std": 470.04
+    },
+    {
+      "step": 16,
+      "date": "2026-09-30",
+      "predicted_price": 3810.49,
+      "lower_95": 2795.97,
+      "upper_95": 4825.01,
+      "ridge_pred": 3824.79,
+      "gbdt_pred": 3831.74,
+      "dnn_pred": 3800.27,
+      "volatility_std": 478.55
+    },
+    {
+      "step": 17,
+      "date": "2026-10-01",
+      "predicted_price": 3742.96,
+      "lower_95": 2709.74,
+      "upper_95": 4776.18,
+      "ridge_pred": 3755.19,
+      "gbdt_pred": 3775.23,
+      "dnn_pred": 3725.17,
+      "volatility_std": 485.08
+    },
+    {
+      "step": 18,
+      "date": "2026-10-02",
+      "predicted_price": 3709.79,
+      "lower_95": 2660.56,
+      "upper_95": 4759.02,
+      "ridge_pred": 3695.42,
+      "gbdt_pred": 3706.62,
+      "dnn_pred": 3720.98,
+      "volatility_std": 490.3
+    },
+    {
+      "step": 19,
+      "date": "2026-10-05",
+      "predicted_price": 3692.23,
+      "lower_95": 2618.8,
+      "upper_95": 4765.66,
+      "ridge_pred": 3686.32,
+      "gbdt_pred": 3695.38,
+      "dnn_pred": 3694.37,
+      "volatility_std": 499.27
+    },
+    {
+      "step": 20,
+      "date": "2026-10-06",
+      "predicted_price": 3663.36,
+      "lower_95": 2562.16,
+      "upper_95": 4764.56,
+      "ridge_pred": 3669.9,
+      "gbdt_pred": 3677.0,
+      "dnn_pred": 3652.78,
+      "volatility_std": 509.81
+    },
+    {
+      "step": 21,
+      "date": "2026-10-07",
+      "predicted_price": 3632.14,
+      "lower_95": 2507.39,
+      "upper_95": 4756.89,
+      "ridge_pred": 3634.59,
+      "gbdt_pred": 3642.43,
+      "dnn_pred": 3624.09,
+      "volatility_std": 518.32
+    },
+    {
+      "step": 22,
+      "date": "2026-10-08",
+      "predicted_price": 3598.05,
+      "lower_95": 2451.38,
+      "upper_95": 4744.72,
+      "ridge_pred": 3605.85,
+      "gbdt_pred": 3616.12,
+      "dnn_pred": 3581.99,
+      "volatility_std": 525.99
+    },
+    {
+      "step": 23,
+      "date": "2026-10-09",
+      "predicted_price": 3562.55,
+      "lower_95": 2395.79,
+      "upper_95": 4729.31,
+      "ridge_pred": 3571.08,
+      "gbdt_pred": 3578.06,
+      "dnn_pred": 3546.14,
+      "volatility_std": 532.77
+    },
+    {
+      "step": 24,
+      "date": "2026-10-12",
+      "predicted_price": 3533.42,
+      "lower_95": 2347.93,
+      "upper_95": 4718.91,
+      "ridge_pred": 3535.68,
+      "gbdt_pred": 3544.1,
+      "dnn_pred": 3521.58,
+      "volatility_std": 538.86
+    },
+    {
+      "step": 25,
+      "date": "2026-10-13",
+      "predicted_price": 3485.58,
+      "lower_95": 2280.09,
+      "upper_95": 4691.07,
+      "ridge_pred": 3506.11,
+      "gbdt_pred": 3511.38,
+      "dnn_pred": 3455.73,
+      "volatility_std": 545.47
+    },
+    {
+      "step": 26,
+      "date": "2026-10-14",
+      "predicted_price": 3421.51,
+      "lower_95": 2203.3,
+      "upper_95": 4639.72,
+      "ridge_pred": 3445.96,
+      "gbdt_pred": 3448.02,
+      "dnn_pred": 3387.97,
+      "volatility_std": 548.74
+    },
+    {
+      "step": 27,
+      "date": "2026-10-15",
+      "predicted_price": 3365.8,
+      "lower_95": 2141.71,
+      "upper_95": 4589.89,
+      "ridge_pred": 3376.09,
+      "gbdt_pred": 3385.96,
+      "dnn_pred": 3341.17,
+      "volatility_std": 548.92
+    },
+    {
+      "step": 28,
+      "date": "2026-10-16",
+      "predicted_price": 3334.41,
+      "lower_95": 2102.66,
+      "upper_95": 4566.16,
+      "ridge_pred": 3329.24,
+      "gbdt_pred": 3338.85,
+      "dnn_pred": 3324.6,
+      "volatility_std": 549.89
+    },
+    {
+      "step": 29,
+      "date": "2026-10-19",
+      "predicted_price": 3329.86,
+      "lower_95": 2082.45,
+      "upper_95": 4577.27,
+      "ridge_pred": 3313.27,
+      "gbdt_pred": 3318.19,
+      "dnn_pred": 3333.85,
+      "volatility_std": 554.4
+    },
+    {
+      "step": 30,
+      "date": "2026-10-20",
+      "predicted_price": 3328.06,
+      "lower_95": 2055.43,
+      "upper_95": 4600.69,
+      "ridge_pred": 3319.16,
+      "gbdt_pred": 3318.81,
+      "dnn_pred": 3327.44,
+      "volatility_std": 563.11
+    }
+  ]
+}
