@@ -71,3 +71,40 @@ Outputs comprehensive performance metrics to `models/model_report.json`.
 ```bash
 python predict.py --commodity "Coking Coal" --volume 75000 --origin "Hay Point / Dalrymple, Australia" --dest "Visakhapatnam" --days 30
 ```
+
+---
+
+## 4. Live BDI Data Auto-Update via Web Scraping & Daily Retraining
+
+To prevent model stale-out, the platform includes an automated live scraping and retraining pipeline:
+
+### Features:
+- **Multi-Source Scraping**: Pulls live daily Baltic Dry Index settlements from TradingEconomics, Investing.com, and Hellenic Shipping News.
+- **CSV Synchronization & Deduplication**: Inserts new settlement records (`"Date","Price","Open","High","Low","Vol.","Change %"`) into `Baltic Dry Index Historical Data.csv` without duplicate rows.
+- **Automated Model Retraining**: Automatically runs walk-forward cross validation and recalibrates the Ridge AR, GBDT, Deep MLP, and Super Learner Meta-Ensemble models, updating `models/model_report.json` and 30/90-day forward forecasts.
+- **In-App Web 1-Click Sync**: Click the **`[LIVE AUTO-SYNC]`** button in the header of `http://127.0.0.1:8000` to trigger on-demand scraping and hot-reload model forecasts.
+
+### Command-Line Usage:
+```bash
+# Run scrape, CSV sync, and model retraining right now:
+python bdi_live_scraper.py --run-now
+
+# Test scraping connectivity without modifying datasets or retraining:
+python bdi_live_scraper.py --test-scrape
+
+# Force update and retraining even if current date is already present:
+python bdi_live_scraper.py --force
+
+# Run continuous background daemon scheduled daily at 18:30 local time:
+python bdi_live_scraper.py --schedule 18:30
+
+# Run periodic background daemon checking every 6 hours:
+python bdi_live_scraper.py --interval 6
+```
+
+### Windows OS Task Scheduler Automation:
+To run silent daily updates automatically without keeping a terminal open:
+1. Double click or run **`setup_windows_task.bat`**.
+2. It registers the Windows Scheduled Task `BDI_Freight_Daily_Update` to execute **`run_daily_update.bat`** daily at 18:30.
+3. Execution logs are stored at **`logs/scraper.log`**.
+
