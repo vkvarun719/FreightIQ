@@ -83,6 +83,7 @@ INDIA_EAST_COAST_PORTS = {
     'Dhamra': {
         'name': 'Dhamra Port (DPCL)',
         'state': 'Odisha',
+        'lat': 20.78, 'lon': 86.95,
         'max_draft_m': 18.5,
         'max_loa_m': 320.0,
         'max_beam_m': 50.0,
@@ -97,6 +98,7 @@ INDIA_EAST_COAST_PORTS = {
     'Gangavaram': {
         'name': 'Gangavaram Port',
         'state': 'Andhra Pradesh',
+        'lat': 17.62, 'lon': 83.24,
         'max_draft_m': 19.0,
         'max_loa_m': 310.0,
         'max_beam_m': 50.0,
@@ -111,6 +113,7 @@ INDIA_EAST_COAST_PORTS = {
     'Krishnapatnam': {
         'name': 'Krishnapatnam Port (KPCT)',
         'state': 'Andhra Pradesh',
+        'lat': 14.25, 'lon': 80.13,
         'max_draft_m': 18.0,
         'max_loa_m': 300.0,
         'max_beam_m': 48.0,
@@ -125,6 +128,7 @@ INDIA_EAST_COAST_PORTS = {
     'Visakhapatnam': {
         'name': 'Visakhapatnam Port (VPA)',
         'state': 'Andhra Pradesh',
+        'lat': 17.69, 'lon': 83.29,
         'max_draft_m': 16.5, # Outer Harbour (Inner is 11.5m)
         'max_loa_m': 290.0,
         'max_beam_m': 45.0,
@@ -139,6 +143,7 @@ INDIA_EAST_COAST_PORTS = {
     'Paradip': {
         'name': 'Paradip Port Trust (PPT)',
         'state': 'Odisha',
+        'lat': 20.26, 'lon': 86.61,
         'max_draft_m': 16.0, # Deep Draft Coal Berth
         'max_loa_m': 285.0,
         'max_beam_m': 45.0,
@@ -153,6 +158,7 @@ INDIA_EAST_COAST_PORTS = {
     'Ennore': {
         'name': 'Kamarajar Port (Ennore)',
         'state': 'Tamil Nadu',
+        'lat': 13.22, 'lon': 80.32,
         'max_draft_m': 16.0,
         'max_loa_m': 270.0,
         'max_beam_m': 43.0,
@@ -167,6 +173,7 @@ INDIA_EAST_COAST_PORTS = {
     'Chennai': {
         'name': 'Chennai Port (ChPA)',
         'state': 'Tamil Nadu',
+        'lat': 13.10, 'lon': 80.30,
         'max_draft_m': 14.0,
         'max_loa_m': 250.0,
         'max_beam_m': 38.0,
@@ -181,6 +188,7 @@ INDIA_EAST_COAST_PORTS = {
     'Haldia': {
         'name': 'Haldia Dock Complex (KOPT)',
         'state': 'West Bengal',
+        'lat': 22.03, 'lon': 88.06,
         'max_draft_m': 8.5, # Critical riverine Hooghly draft restriction
         'max_loa_m': 195.0,
         'max_beam_m': 32.2,
@@ -200,6 +208,7 @@ INDIA_EAST_COAST_PORTS = {
 ORIGIN_PORTS = {
     'Port Hedland, Australia': {
         'commodity': ['Iron Ore'],
+        'lat': -20.31, 'lon': 118.58,
         'avg_distance_nm': 3350,
         'typical_load_rate_tpd': 85000,
         'origin_region': 'Western Australia',
@@ -207,6 +216,7 @@ ORIGIN_PORTS = {
     },
     'Hay Point / Dalrymple, Australia': {
         'commodity': ['Coking Coal', 'Thermal Coal'],
+        'lat': -21.27, 'lon': 149.30,
         'avg_distance_nm': 4650,
         'typical_load_rate_tpd': 60000,
         'origin_region': 'Eastern Australia',
@@ -214,6 +224,7 @@ ORIGIN_PORTS = {
     },
     'Newcastle, Australia': {
         'commodity': ['Thermal Coal', 'Coking Coal'],
+        'lat': -32.93, 'lon': 151.78,
         'avg_distance_nm': 5100,
         'typical_load_rate_tpd': 55000,
         'origin_region': 'Eastern Australia',
@@ -221,6 +232,7 @@ ORIGIN_PORTS = {
     },
     'Tubarao / Itaqui, Brazil': {
         'commodity': ['Iron Ore', 'Bauxite', 'Grains'],
+        'lat': -20.28, 'lon': -40.25,
         'avg_distance_nm': 8800,
         'typical_load_rate_tpd': 90000,
         'origin_region': 'Atlantic / South America',
@@ -228,6 +240,7 @@ ORIGIN_PORTS = {
     },
     'Richards Bay, South Africa': {
         'commodity': ['Thermal Coal', 'Titanium Minerals'],
+        'lat': -28.80, 'lon': 32.08,
         'avg_distance_nm': 4150,
         'typical_load_rate_tpd': 65000,
         'origin_region': 'South Africa',
@@ -235,6 +248,7 @@ ORIGIN_PORTS = {
     },
     'Muara Pantai / Samarinda, Indonesia': {
         'commodity': ['Thermal Coal'],
+        'lat': -0.50, 'lon': 117.15,
         'avg_distance_nm': 2100,
         'typical_load_rate_tpd': 25000, # Anchorage transshipment
         'origin_region': 'Southeast Asia',
@@ -242,6 +256,7 @@ ORIGIN_PORTS = {
     },
     'Kamsar, Guinea': {
         'commodity': ['Bauxite'],
+        'lat': 10.65, 'lon': -14.60,
         'avg_distance_nm': 7900,
         'typical_load_rate_tpd': 45000,
         'origin_region': 'West Africa',
@@ -249,6 +264,7 @@ ORIGIN_PORTS = {
     },
     'Black Sea / Novorossiysk': {
         'commodity': ['Grains', 'Fertilizers', 'Coal'],
+        'lat': 44.72, 'lon': 37.77,
         'avg_distance_nm': 4900,
         'typical_load_rate_tpd': 20000,
         'origin_region': 'Black Sea / Med',
@@ -256,6 +272,7 @@ ORIGIN_PORTS = {
     },
     'Indian Coastal (Mormugao / Jaigad)': {
         'commodity': ['Thermal Coal', 'Iron Ore Pellets', 'Bauxite'],
+        'lat': 15.41, 'lon': 73.80,
         'avg_distance_nm': 1100,
         'typical_load_rate_tpd': 28000,
         'origin_region': 'India West Coast (Domestic Coastal)',

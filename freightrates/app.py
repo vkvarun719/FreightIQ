@@ -18,6 +18,8 @@ import baltic_data
 import forecasting_models
 import maritime_data
 import freight_engine
+import bunker_data
+import alert_system
 
 app = FastAPI(title="Baltic Exchange Freight Analytics Workstation", version="4.5.0")
 
@@ -172,8 +174,17 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <button onclick="downloadCSV()" class="t-btn text-xs">
                 EXPORT DATA [CSV]
             </button>
+            <button onclick="downloadPDF()" class="t-btn text-xs bg-[#2e1065] border-[#8b5cf6] text-purple-300">
+                EXPORT DATA [PDF]
+            </button>
             <button onclick="window.open('/api/metrics', '_blank')" class="t-btn text-xs">
                 VALIDATION AUDIT [JSON]
+            </button>
+            <button onclick="window.open('/map', '_blank')" class="t-btn text-xs bg-[#0f3460] border-[#06b6d4] text-cyan-300">
+                ROUTE MAP [LIVE]
+            </button>
+            <button onclick="document.getElementById('alert-modal').classList.toggle('hidden')" class="t-btn text-xs bg-[#3b1a45] border-[#a855f7] text-purple-300">
+                ALERTS [SET]
             </button>
             <button onclick="triggerForecast()" class="t-btn text-xs bg-[#1e293b] border-[#3b82f6] text-white">
                 RECALCULATE [RUN]
@@ -207,7 +218,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <span class="text-[#222936]">|</span>
             <div>
                 <span class="text-slate-500">VLSFO 0.5% BUNKER:</span> 
-                <span class="font-bold text-amber-400 ml-1">$615.00/MT</span>
+                <span class="font-bold text-amber-400 ml-1" id="ticker-bunker">$615.00/MT</span>
             </div>
             <span class="text-[#222936]">|</span>
             <div>
@@ -607,6 +618,50 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         </div>
     </footer>
 
+    <!-- ALERT CONFIGURATION MODAL -->
+    <div id="alert-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+        <div class="terminal-panel w-full max-w-lg mx-4 shadow-2xl">
+            <div class="terminal-header flex justify-between items-center">
+                <span class="text-white font-bold">BDI PRICE ALERT CONFIGURATION</span>
+                <button onclick="document.getElementById('alert-modal').classList.add('hidden')" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+            <div class="p-4 space-y-3">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 block mb-1 font-mono">EMAIL ADDRESS</label>
+                        <input type="email" id="alert-email" placeholder="user@example.com" class="t-input">
+                    </div>
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 block mb-1 font-mono">BDI THRESHOLD</label>
+                        <input type="number" id="alert-threshold" value="3000" step="50" class="t-input mono-val">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[10px] uppercase text-slate-500 block mb-1 font-mono">TRIGGER WHEN BDI...</label>
+                        <select id="alert-direction" class="t-input">
+                            <option value="below">DROPS BELOW THRESHOLD</option>
+                            <option value="above">RISES ABOVE THRESHOLD</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button onclick="createAlert()" class="t-btn w-full bg-[#1e3a5f] border-[#3b82f6] text-white font-bold py-1.5">CREATE ALERT</button>
+                    </div>
+                </div>
+                <div class="terminal-sub p-2 max-h-40 overflow-y-auto custom-scroll">
+                    <div class="text-[10px] uppercase text-slate-500 font-mono mb-1">ACTIVE ALERTS</div>
+                    <div id="alerts-list" class="space-y-1 text-[11px] font-mono">
+                        <div class="text-slate-500 italic">No alerts configured</div>
+                    </div>
+                </div>
+                <div class="text-[10px] text-slate-500 font-mono">
+                    NOTE: Configure SMTP_USERNAME &amp; SMTP_PASSWORD environment variables for email delivery.
+                    Alerts are also logged to the server console.
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- CLIENT CONTROLLER SCRIPT -->
     <script>
         let currentHorizon = 30;
@@ -627,9 +682,68 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
                 await triggerForecast();
                 await runOptimization();
+                await loadBunkerPrice();
+                await loadAlerts();
             } catch (err) {
                 console.error("Initialization error:", err);
             }
+        }
+
+        async function loadBunkerPrice() {
+            try {
+                const res = await fetch('/api/bunker');
+                const data = await res.json();
+                const el = document.getElementById('ticker-bunker');
+                if (el && data.vlsfo_price) {
+                    el.innerText = `$${data.vlsfo_price.toFixed(2)}/MT`;
+                    el.title = `Source: ${data.source || 'N/A'} | Updated: ${data.last_updated || 'N/A'}`;
+                }
+            } catch (e) { console.warn('Bunker price fetch failed:', e); }
+        }
+
+        async function loadAlerts() {
+            try {
+                const res = await fetch('/api/alerts');
+                const alerts = await res.json();
+                const el = document.getElementById('alerts-list');
+                if (!el) return;
+                if (alerts.length === 0) {
+                    el.innerHTML = '<div class="text-slate-500 italic">No alerts configured</div>';
+                    return;
+                }
+                el.innerHTML = alerts.map(a => `
+                    <div class="flex justify-between items-center p-1.5 bg-[#0a0d12] border border-[#222936] rounded">
+                        <div>
+                            <span class="text-slate-300">${a.label}</span>
+                            <span class="text-slate-500 ml-2">${a.email}</span>
+                        </div>
+                        <button onclick="deleteAlert('${a.id}')" class="text-rose-400 hover:text-rose-300 text-xs px-2">DEL</button>
+                    </div>
+                `).join('');
+            } catch (e) { console.warn('Alerts fetch failed:', e); }
+        }
+
+        async function createAlert() {
+            const email = document.getElementById('alert-email').value;
+            const threshold = parseFloat(document.getElementById('alert-threshold').value);
+            const direction = document.getElementById('alert-direction').value;
+            if (!email || !threshold) { alert('Please fill in email and threshold'); return; }
+            try {
+                await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, threshold, direction})
+                });
+                await loadAlerts();
+                document.getElementById('alert-email').value = '';
+            } catch (e) { console.error('Create alert failed:', e); }
+        }
+
+        async function deleteAlert(id) {
+            try {
+                await fetch(`/api/alerts/${id}`, {method: 'DELETE'});
+                await loadAlerts();
+            } catch (e) { console.error('Delete alert failed:', e); }
         }
 
         function renderMetrics(metrics) {
@@ -1037,7 +1151,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
         }
 
         function downloadCSV() {
-            window.location.href = `/api/export-csv?days=${currentHorizon}`;
+            window.open(`/api/export-csv?days=${currentHorizon}`, '_blank');
+        }
+
+        function downloadPDF() {
+            window.open(`/api/export-pdf?days=${currentHorizon}`, '_blank');
         }
 
         window.addEventListener('DOMContentLoaded', initDashboard);
@@ -1153,6 +1271,16 @@ def run_optimization(req: OptimizationRequest):
 @app.get("/api/export-csv")
 def export_csv(days: int = Query(30, ge=1, le=180)):
     forecasts = GLOBAL_ENSEMBLE.forecast_multistep(DATA_RECORDS, steps=days, start_date=DATA_RECORDS[-1]['date'])
+    
+    # Reformat date to DD-MMM-YYYY for Excel compatibility (prevents ######## width issues)
+    for row in forecasts:
+        if 'date' in row and isinstance(row['date'], str):
+            try:
+                dt_obj = datetime.strptime(row['date'], '%Y-%m-%d')
+                row['date'] = dt_obj.strftime('%d-%b-%Y')
+            except ValueError:
+                pass
+                
     output = io.StringIO()
     writer = csv.DictWriter(output, fieldnames=list(forecasts[0].keys()))
     writer.writeheader()
@@ -1161,6 +1289,289 @@ def export_csv(days: int = Query(30, ge=1, le=180)):
     response = StreamingResponse(iter([output.getvalue()]), media_type="text/csv")
     response.headers["Content-Disposition"] = f"attachment; filename=baltic_dry_index_forecast_2026_{days}d.csv"
     return response
+
+@app.get("/api/export-pdf")
+def export_pdf(days: int = Query(30, ge=1, le=180)):
+    from fpdf import FPDF
+    forecasts = GLOBAL_ENSEMBLE.forecast_multistep(DATA_RECORDS, steps=days, start_date=DATA_RECORDS[-1]['date'])
+    
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Title
+    pdf.set_font("helvetica", "B", 16)
+    pdf.cell(0, 10, f"Baltic Dry Index - {days} Day Forecast", ln=True, align='C')
+    pdf.ln(10)
+    
+    # Table Header
+    pdf.set_font("helvetica", "B", 10)
+    col_w = [40, 45, 45, 45]
+    headers = ["Date", "Predicted Price", "Lower Bound", "Upper Bound"]
+    for i, h in enumerate(headers):
+        pdf.cell(col_w[i], 10, h, border=1, align='C')
+    pdf.ln()
+    
+    # Table Rows
+    pdf.set_font("helvetica", "", 10)
+    for row in forecasts:
+        pdf.cell(col_w[0], 10, str(row.get('date', '')), border=1, align='C')
+        pdf.cell(col_w[1], 10, f"${row.get('predicted_price', 0):.2f}", border=1, align='C')
+        pdf.cell(col_w[2], 10, f"${row.get('lower_bound', 0):.2f}", border=1, align='C')
+        pdf.cell(col_w[3], 10, f"${row.get('upper_bound', 0):.2f}", border=1, align='C')
+        pdf.ln()
+    
+    pdf_bytes = bytes(pdf.output())
+    response = StreamingResponse(iter([pdf_bytes]), media_type="application/pdf")
+    response.headers["Content-Disposition"] = f"attachment; filename=bdi_forecast_{days}d.pdf"
+    return response
+
+# =====================================================
+# FEATURE: Live Bunker Fuel Price API
+# =====================================================
+@app.get("/api/bunker")
+def get_bunker_price():
+    return bunker_data.get_bunker_price()
+
+@app.get("/api/bunker/regional")
+def get_regional_bunker_prices():
+    return bunker_data.get_all_regional_prices()
+
+# =====================================================
+# FEATURE: Port & Route Data APIs (for Route Map)
+# =====================================================
+@app.get("/api/ports")
+def get_ports():
+    india_ports = {}
+    for key, port in maritime_data.INDIA_EAST_COAST_PORTS.items():
+        india_ports[key] = {
+            'name': port['name'],
+            'state': port['state'],
+            'lat': port.get('lat', 0),
+            'lon': port.get('lon', 0),
+            'max_draft_m': port['max_draft_m'],
+            'max_loa_m': port['max_loa_m'],
+            'max_dwt': port['max_dwt'],
+            'discharge_rate_tpd': port['discharge_rate_tpd'],
+            'congestion_index': port['congestion_index'],
+            'type': 'destination'
+        }
+    origin_ports = {}
+    for key, port in maritime_data.ORIGIN_PORTS.items():
+        origin_ports[key] = {
+            'name': key,
+            'lat': port.get('lat', 0),
+            'lon': port.get('lon', 0),
+            'commodity': port['commodity'],
+            'avg_distance_nm': port['avg_distance_nm'],
+            'origin_region': port['origin_region'],
+            'type': 'origin'
+        }
+    return {'india_ports': india_ports, 'origin_ports': origin_ports}
+
+@app.get("/api/routes")
+def get_routes():
+    routes = []
+    for origin_name, origin in maritime_data.ORIGIN_PORTS.items():
+        for dest_name, dest in maritime_data.INDIA_EAST_COAST_PORTS.items():
+            routes.append({
+                'origin': origin_name,
+                'origin_lat': origin.get('lat', 0),
+                'origin_lon': origin.get('lon', 0),
+                'dest': dest_name,
+                'dest_lat': dest.get('lat', 0),
+                'dest_lon': dest.get('lon', 0),
+                'distance_nm': origin['avg_distance_nm'],
+                'commodity': origin['commodity'],
+                'origin_region': origin['origin_region']
+            })
+    return routes
+
+# =====================================================
+# FEATURE: Alert System CRUD APIs
+# =====================================================
+class AlertRequest(BaseModel):
+    email: str
+    threshold: float
+    direction: str = 'below'
+    label: str = ''
+
+@app.post("/api/alerts")
+def create_alert(req: AlertRequest):
+    return alert_system.alert_manager.add_alert(
+        email=req.email,
+        threshold=req.threshold,
+        direction=req.direction,
+        label=req.label
+    )
+
+@app.get("/api/alerts")
+def list_alerts():
+    return alert_system.alert_manager.get_all_alerts()
+
+@app.delete("/api/alerts/{alert_id}")
+def delete_alert(alert_id: str):
+    alert_system.alert_manager.remove_alert(alert_id)
+    return {'status': 'deleted', 'id': alert_id}
+
+@app.post("/api/alerts/check")
+def check_alerts_now():
+    current_price = DATA_RECORDS[-1]['price']
+    forecasts = GLOBAL_ENSEMBLE.forecast_multistep(DATA_RECORDS, steps=7, start_date=DATA_RECORDS[-1]['date'])
+    triggered = alert_system.alert_manager.check_alerts(current_price, forecasts)
+    return {'checked': len(alert_system.alert_manager.get_active_alerts()), 'triggered': triggered}
+
+# =====================================================
+# FEATURE: Interactive Trade Route Map Page
+# =====================================================
+MAP_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FREIGHTIQ - GLOBAL TRADE ROUTE MAP</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background: #0c0f14; font-family: 'IBM Plex Sans', sans-serif; }
+        #map { width: 100%; height: calc(100vh - 48px); }
+        .leaflet-popup-content-wrapper { background: #13171f; color: #d1d5db; border: 1px solid #222936; border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; }
+        .leaflet-popup-tip { background: #13171f; }
+        .leaflet-popup-content { margin: 8px 12px; }
+        .port-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; color: #fff; text-shadow: 0 0 4px rgba(0,0,0,0.9); }
+        .custom-tooltip { background: #1e293b !important; border: 1px solid #334155 !important; color: #e2e8f0 !important; font-family: 'IBM Plex Mono', monospace !important; font-size: 10px !important; padding: 4px 8px !important; }
+    </style>
+</head>
+<body>
+    <header class="bg-[#0f131a] border-b border-[#222936] px-4 py-2 flex items-center justify-between" style="height:48px">
+        <div class="flex items-center gap-3">
+            <a href="/" class="text-slate-400 hover:text-white text-xs font-mono">&larr; BACK TO DESK</a>
+            <span class="text-[#4b5563]">|</span>
+            <span class="font-mono text-xs font-bold text-white tracking-wider uppercase">GLOBAL DRY BULK TRADE ROUTE INTELLIGENCE MAP</span>
+        </div>
+        <div class="flex items-center gap-3 text-[11px] font-mono">
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block"></span> ORIGIN PORTS</span>
+            <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span> INDIA DISCHARGE PORTS</span>
+            <span class="flex items-center gap-1"><span class="w-1 h-3 bg-amber-400/60 inline-block"></span> TRADE ROUTES</span>
+        </div>
+    </header>
+    <div id="map"></div>
+    <script>
+        const map = L.map('map', {
+            center: [10, 65],
+            zoom: 3,
+            zoomControl: true,
+            attributionControl: false
+        });
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            maxZoom: 18,
+            subdomains: 'abcd'
+        }).addTo(map);
+
+        async function loadMapData() {
+            const [portsRes, routesRes, bunkerRes] = await Promise.all([
+                fetch('/api/ports'),
+                fetch('/api/routes'),
+                fetch('/api/bunker')
+            ]);
+            const ports = await portsRes.json();
+            const routes = await routesRes.json();
+            const bunker = await bunkerRes.json();
+
+            // Draw India discharge ports (green)
+            for (const [key, p] of Object.entries(ports.india_ports)) {
+                if (!p.lat || !p.lon) continue;
+                const marker = L.circleMarker([p.lat, p.lon], {
+                    radius: 8, fillColor: '#10b981', color: '#065f46', weight: 2, fillOpacity: 0.9
+                }).addTo(map);
+                marker.bindPopup(`
+                    <div style="min-width:200px">
+                        <div style="color:#10b981;font-weight:700;font-size:12px;margin-bottom:4px">${p.name}</div>
+                        <div style="color:#94a3b8;font-size:10px;margin-bottom:6px">${p.state}, India</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px">
+                            <span style="color:#64748b">MAX DRAFT:</span><span style="color:#f1f5f9;font-weight:600">${p.max_draft_m}m</span>
+                            <span style="color:#64748b">MAX LOA:</span><span style="color:#f1f5f9;font-weight:600">${p.max_loa_m}m</span>
+                            <span style="color:#64748b">MAX DWT:</span><span style="color:#f1f5f9;font-weight:600">${(p.max_dwt/1000).toFixed(0)}K</span>
+                            <span style="color:#64748b">DISCHARGE:</span><span style="color:#f1f5f9;font-weight:600">${(p.discharge_rate_tpd/1000).toFixed(0)}K TPD</span>
+                            <span style="color:#64748b">CONGESTION:</span><span style="color:#f1f5f9;font-weight:600">${p.congestion_index}</span>
+                        </div>
+                    </div>
+                `);
+                marker.bindTooltip(key.toUpperCase(), {className: 'custom-tooltip', permanent: true, direction: 'top', offset: [0, -10]});
+            }
+
+            // Draw origin ports (cyan)
+            for (const [key, p] of Object.entries(ports.origin_ports)) {
+                if (!p.lat || !p.lon) continue;
+                const marker = L.circleMarker([p.lat, p.lon], {
+                    radius: 7, fillColor: '#06b6d4', color: '#0e7490', weight: 2, fillOpacity: 0.9
+                }).addTo(map);
+                marker.bindPopup(`
+                    <div style="min-width:180px">
+                        <div style="color:#06b6d4;font-weight:700;font-size:12px;margin-bottom:4px">${p.name}</div>
+                        <div style="color:#94a3b8;font-size:10px;margin-bottom:6px">${p.origin_region}</div>
+                        <div style="font-size:10px">
+                            <span style="color:#64748b">COMMODITY:</span> <span style="color:#fbbf24;font-weight:600">${p.commodity.join(', ')}</span><br>
+                            <span style="color:#64748b">DISTANCE TO INDIA:</span> <span style="color:#f1f5f9;font-weight:600">${p.avg_distance_nm.toLocaleString()} NM</span>
+                        </div>
+                    </div>
+                `);
+                marker.bindTooltip(key.split(',')[0].toUpperCase(), {className: 'custom-tooltip', direction: 'top', offset: [0, -8]});
+            }
+
+            // Draw trade routes (animated lines)
+            const routeColors = {
+                'Iron Ore': '#ef4444', 'Coking Coal': '#f59e0b', 'Thermal Coal': '#8b5cf6',
+                'Bauxite': '#ec4899', 'Grains': '#22c55e', 'Fertilizers': '#06b6d4', 'Coal': '#a78bfa'
+            };
+            const drawnRoutes = new Set();
+            routes.forEach(r => {
+                if (!r.origin_lat || !r.dest_lat) return;
+                const routeKey = `${r.origin}-${r.dest}`;
+                if (drawnRoutes.has(routeKey)) return;
+                drawnRoutes.add(routeKey);
+
+                const commodity = r.commodity[0] || 'Coal';
+                const color = routeColors[commodity] || '#f59e0b';
+
+                // Create curved path through midpoint
+                const midLat = (r.origin_lat + r.dest_lat) / 2;
+                let midLon = (r.origin_lon + r.dest_lon) / 2;
+                const latOffset = (Math.abs(r.origin_lon - r.dest_lon) > 100) ? -8 : 5;
+
+                const line = L.polyline(
+                    [[r.origin_lat, r.origin_lon], [midLat + latOffset, midLon], [r.dest_lat, r.dest_lon]],
+                    { color: color, weight: 1.5, opacity: 0.45, dashArray: '6 4', smoothFactor: 2 }
+                ).addTo(map);
+
+                const speed = 13; // knots average
+                const transitDays = (r.distance_nm / (speed * 24)).toFixed(1);
+                line.bindPopup(`
+                    <div style="min-width:220px">
+                        <div style="color:${color};font-weight:700;font-size:11px;margin-bottom:2px">${r.origin}</div>
+                        <div style="color:#64748b;font-size:10px;margin-bottom:4px">&darr; TO &darr;</div>
+                        <div style="color:#10b981;font-weight:700;font-size:11px;margin-bottom:6px">${r.dest}</div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10px">
+                            <span style="color:#64748b">DISTANCE:</span><span style="color:#f1f5f9;font-weight:600">${r.distance_nm.toLocaleString()} NM</span>
+                            <span style="color:#64748b">TRANSIT:</span><span style="color:#f1f5f9;font-weight:600">${transitDays} DAYS</span>
+                            <span style="color:#64748b">COMMODITY:</span><span style="color:#fbbf24;font-weight:600">${r.commodity.join(', ')}</span>
+                            <span style="color:#64748b">BUNKER (VLSFO):</span><span style="color:#f59e0b;font-weight:600">$${bunker.vlsfo_price}/MT</span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+        loadMapData();
+    </script>
+</body>
+</html>
+"""
+
+@app.get("/map", response_class=HTMLResponse)
+def route_map():
+    return HTMLResponse(content=MAP_HTML)
 
 if __name__ == "__main__":
     print("Starting Baltic Exchange Freight Analytics Desk at http://127.0.0.1:8000 ...")

@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Temporary test outputs
+test_forecast.csv
+test_forecast.pdf
+FreightIQ_Platform_Analysis.pdf
+
+# Local database/cache files
+freightrates/models/alerts.json
+freightrates/models/bunker_cache.json
+
+# IDEs and OS files
+.vscode/
+.idea/
+.DS_Store

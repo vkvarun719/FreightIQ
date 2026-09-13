@@ -142,7 +142,10 @@ def optimize_vessel_for_port(cargo_mt, commodity, origin_port_name, dest_port_na
         # Daily hire calculation
         v_multiplier = v_spec['base_multiplier']
         daily_hire = prompt_cape_rate * 10.5 * v_multiplier
-        bunker_cost = (round_trip_sea * v_spec['fuel_sea_mt_day'] + total_port_days * v_spec['fuel_port_mt_day']) * 610.0
+        import bunker_data
+        bunker_price_data = bunker_data.get_bunker_price()
+        vlsfo_price = bunker_price_data.get('vlsfo_price', 615.0)
+        bunker_cost = (round_trip_sea * v_spec['fuel_sea_mt_day'] + total_port_days * v_spec['fuel_port_mt_day']) * vlsfo_price
         port_dues = 45000 if v_name == 'Capesize' else (32000 if v_name == 'Panamax' else 22000)
         
         total_freight_cost = (total_voyage_days * daily_hire + bunker_cost + port_dues) * num_trips_needed
