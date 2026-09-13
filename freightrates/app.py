@@ -21,20 +21,21 @@ import freight_engine
 
 app = FastAPI(title="Baltic Exchange Freight Analytics Workstation", version="4.5.0")
 
-# Load historical 10-year data and calibrate global ensemble
-print("Initializing Baltic Exchange Data Feed (10-Year Series: 2014-2026)...")
-RAW_FORECASTS, DATA_RECORDS, ENRICHED_DATA, GLOBAL_ENSEMBLE = freight_engine.get_calibrated_forecasts(horizon_days=180)
-X_MAT, Y_PRICES, _, FEATURE_NAMES = baltic_data.extract_feature_matrix(ENRICHED_DATA)
-
-# Load metrics report
 MODEL_REPORT_PATH = os.path.join('models', 'model_report.json')
-if os.path.exists(MODEL_REPORT_PATH):
-    with open(MODEL_REPORT_PATH, 'r') as f:
-        MODEL_REPORT = json.load(f)
-else:
-    MODEL_REPORT = {}
+RAW_FORECASTS, DATA_RECORDS, ENRICHED_DATA, GLOBAL_ENSEMBLE = None, None, None, None
+X_MAT, Y_PRICES, FEATURE_NAMES, MODEL_REPORT = None, None, None, {}
 
-print(f"Terminal online. Active database: {len(DATA_RECORDS)} daily settlements.")
+def reload_data_feed():
+    global RAW_FORECASTS, DATA_RECORDS, ENRICHED_DATA, GLOBAL_ENSEMBLE, X_MAT, Y_PRICES, FEATURE_NAMES, MODEL_REPORT
+    print("Initializing/Refreshing Baltic Exchange Data Feed (10-Year Series: 2014-2026)...")
+    RAW_FORECASTS, DATA_RECORDS, ENRICHED_DATA, GLOBAL_ENSEMBLE = freight_engine.get_calibrated_forecasts(horizon_days=180)
+    X_MAT, Y_PRICES, _, FEATURE_NAMES = baltic_data.extract_feature_matrix(ENRICHED_DATA)
+    if os.path.exists(MODEL_REPORT_PATH):
+        with open(MODEL_REPORT_PATH, 'r') as f:
+            MODEL_REPORT = json.load(f)
+    print(f"Terminal online. Active database: {len(DATA_RECORDS)} daily settlements.")
+
+reload_data_feed()
 
 DASHBOARD_HTML = """<!DOCTYPE html>
 <html lang="en">
@@ -169,6 +170,10 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <span class="text-[11px] text-[#10b981] font-mono">STATUS: SYSTEM ACTIVE [3,160 SESSIONS 2014-2026]</span>
         </div>
         <div class="flex items-center gap-2">
+            <button onclick="syncLiveData()" id="btn-sync" class="t-btn text-xs bg-emerald-950/70 border-emerald-500/80 text-emerald-300 hover:bg-emerald-900 flex items-center gap-1.5" title="Scrape latest live BDI settlements and retrain models">
+                <span id="sync-spinner" class="hidden inline-block animate-spin text-emerald-400">⟳</span>
+                <span id="sync-text">LIVE AUTO-SYNC</span>
+            </button>
             <button onclick="downloadCSV()" class="t-btn text-xs">
                 EXPORT DATA [CSV]
             </button>
@@ -1036,6 +1041,34 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             document.getElementById('rec-congestion-text').innerText = r.port_congestion_risk.details;
         }
 
+        async function syncLiveData() {
+            const btn = document.getElementById('btn-sync');
+            const txt = document.getElementById('sync-text');
+            const spinner = document.getElementById('sync-spinner');
+            btn.disabled = true;
+            spinner.classList.remove('hidden');
+            txt.innerText = 'SYNCING & RETRAINING...';
+
+            try {
+                const resp = await fetch('/api/sync-live-data', { method: 'POST' });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    const s = data.settlement;
+                    const changeSymbol = s.change > 0 ? '+' : '';
+                    alert(`✅ Live BDI Sync Successful!\n\nSettlement Date: ${s.date_str_csv}\nLatest BDI Price: $${Number(s.price).toLocaleString()} pts\nDaily Change: ${changeSymbol}${s.change} pts (${changeSymbol}${s.change_pct}%)\nStatus: ${data.retrained ? 'Models successfully retrained on fresh data' : 'Dataset already fresh'}\nTotal Sessions: ${data.total_records}`);
+                    await initDashboard();
+                } else {
+                    alert('Sync Notice: ' + data.message);
+                }
+            } catch (err) {
+                alert('Sync Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add('hidden');
+                txt.innerText = 'LIVE AUTO-SYNC';
+            }
+        }
+
         function downloadCSV() {
             window.location.href = `/api/export-csv?days=${currentHorizon}`;
         }
@@ -1149,6 +1182,27 @@ def run_optimization(req: OptimizationRequest):
         'idle_management': idle_res,
         'risk_evaluation': risk_res
     }
+
+@app.post("/api/sync-live-data")
+def sync_live_data(force: bool = False):
+    import bdi_live_scraper
+    try:
+        res = bdi_live_scraper.run_live_update(force=force, retrain_if_no_change=force)
+        reload_data_feed()
+        return {
+            "status": "success",
+            "message": "Live BDI data feed synced and models refreshed successfully.",
+            "settlement": res.get("settlement", {}),
+            "retrained": res.get("retrained", False),
+            "latest_record": DATA_RECORDS[-1] if DATA_RECORDS else None,
+            "total_records": len(DATA_RECORDS) if DATA_RECORDS else 0,
+            "model_metrics": MODEL_REPORT.get("model_metrics", {})
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
 
 @app.get("/api/export-csv")
 def export_csv(days: int = Query(30, ge=1, le=180)):
