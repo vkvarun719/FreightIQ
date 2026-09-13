@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Environment variables
 .env
 
@@ -19,3 +20,24 @@ freightrates/models/bunker_cache.json
 .vscode/
 .idea/
 .DS_Store
+=======
+# Python cache and byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.tmp
+
+# Logs
+logs/
+*.log
+
+# Environments
+.env
+.venv
+env/
+venv/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+>>>>>>> 2a7bf1ab4887fed4df11f5694e5d86247bb6d2ab
