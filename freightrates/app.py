@@ -233,7 +233,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <span class="text-[#222936]">|</span>
             <div>
                 <span class="text-slate-500">VALUATION BASELINE:</span> 
-                <span class="text-slate-300 ml-1">08-SEP-2026</span>
+                <span class="text-slate-300 ml-1 font-bold" id="ticker-baseline-date">15-SEP-2026</span>
             </div>
         </div>
     </div>
@@ -678,11 +678,12 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
         async function initDashboard() {
             try {
-                const metricsRes = await fetch('/api/metrics');
+                const cacheBuster = Date.now();
+                const metricsRes = await fetch(`/api/metrics?_t=${cacheBuster}`);
                 const metricsData = await metricsRes.json();
                 renderMetrics(metricsData);
 
-                const histRes = await fetch('/api/history?limit=3200');
+                const histRes = await fetch(`/api/history?limit=3200&_t=${cacheBuster}`);
                 fullHistoricalData = await histRes.json();
 
                 await triggerForecast();
@@ -771,7 +772,8 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
         async function triggerForecast() {
             try {
-                const res = await fetch(`/api/forecast?days=${currentHorizon}`);
+                const cacheBuster = Date.now();
+                const res = await fetch(`/api/forecast?days=${currentHorizon}&_t=${cacheBuster}`);
                 const data = await res.json();
                 cachedForecast = data.forecasts;
 
@@ -781,6 +783,10 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                 
                 document.getElementById('kpi-latest-price').innerText = latestPrice.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 document.getElementById('ticker-bdi').innerText = Math.round(latestPrice).toLocaleString();
+                if (data.latest_date) {
+                    const elDate = document.getElementById('ticker-baseline-date');
+                    if (elDate) elDate.innerText = data.latest_date;
+                }
                 document.getElementById('kpi-target-price').innerText = lastPred.predicted_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 document.getElementById('kpi-target-pct').innerText = `${changePct >= 0 ? '+' : ''}${changePct.toFixed(1)}% (${currentHorizon}-DAY OUTLOOK)`;
                 document.getElementById('kpi-target-pct').className = `text-[10px] font-mono mt-0.5 ${changePct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
